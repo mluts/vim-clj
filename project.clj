@@ -10,5 +10,5 @@
   :main ^:skip-aot vim-nrepl.core
   :target-path "target/%s"
   :uberjar-name "vim-nrepl.jar"
-  :repl-options {:init-ns vim-nrepl.core}
+  :repl-options {:init-ns vim-nrepl.repl}
   :profiles {:uberjar {:aot :all}})
