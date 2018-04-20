@@ -1,6 +1,6 @@
-(ns vim-nrepl.nrepl-test
+(ns vim-clj.nrepl-test
   (:require [clojure.test :refer :all]
-            [vim-nrepl.nrepl :refer :all]))
+            [vim-clj.nrepl :refer :all]))
 
 (deftest str->conn-map-test
   (are [x y] (= x (str->conn-map y))

@@ -1,7 +1,7 @@
-(ns vim-nrepl.repl
-  (:require [vim-nrepl.nvim.core :as nvim]
-            [vim-nrepl.nvim.methods :as methods]
-            [vim-nrepl.nrepl.core :as nrepl]
+(ns vim-clj.repl
+  (:require [vim-clj.nvim.core :as nvim]
+            [vim-clj.nvim.methods :as methods]
+            [vim-clj.nrepl.core :as nrepl]
             [clojure.pprint :refer [pprint]]))
 
 (defn connect-nvim! []

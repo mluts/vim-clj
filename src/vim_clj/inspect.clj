@@ -1,4 +1,4 @@
-(ns vim-nrepl.inspect
+(ns vim-clj.inspect
   (:require [clojure.tools.namespace.parse :as ns-parse]
             [clojure.java.io :as io]))
 

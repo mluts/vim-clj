@@ -1,7 +1,7 @@
-(ns vim-nrepl.core
-  (:require [vim-nrepl.inspect :as inspect]
-            [vim-nrepl.nvim.core :as nvim]
-            [vim-nrepl.nvim.methods :as methods])
+(ns vim-clj.core
+  (:require [vim-clj.inspect :as inspect]
+            [vim-clj.nvim.core :as nvim]
+            [vim-clj.nvim.methods :as methods])
   (:gen-class))
 
 (defn -main

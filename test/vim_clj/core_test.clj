@@ -1,6 +1,6 @@
-(ns vim-nrepl.core-test
+(ns vim-clj.core-test
   (:require [clojure.test :refer :all]
-            [vim-nrepl.core :refer :all]))
+            [vim-clj.core :refer :all]))
 
 (deftest a-test
   (testing "FIXME, I fail."

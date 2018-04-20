@@ -1,11 +1,11 @@
-(ns vim-nrepl.nvim.core
+(ns vim-clj.nvim.core
   (:require [neovim-client.1.api :as nvim-api]
             [neovim-client.nvim :as nvim-client]))
 
 (defonce nvim (atom {}))
 
-(defonce is-running-var "vim_nrepl_is_running")
-(defonce channel-var "vim_nrepl_channel")
+(defonce is-running-var "vim_clj_is_running")
+(defonce channel-var "vim_clj_channel")
 
 (defn msg->map [[msg-type argc method args]]
   {:msg-type  msg-type

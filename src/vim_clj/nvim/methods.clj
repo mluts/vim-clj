@@ -1,7 +1,7 @@
-(ns vim-nrepl.nvim.methods
-  (:require [vim-nrepl.inspect :as inspect]
-            [vim-nrepl.nvim.core :as nvim]
-            [vim-nrepl.nrepl.core :as nrepl]
+(ns vim-clj.nvim.methods
+  (:require [vim-clj.inspect :as inspect]
+            [vim-clj.nvim.core :as nvim]
+            [vim-clj.nrepl.core :as nrepl]
             [cljfmt.core :as fmt]))
 
 (defonce should-shutdown (atom false))

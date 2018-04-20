@@ -1,4 +1,4 @@
-(defproject vim-nrepl "0.1.0-SNAPSHOT"
+(defproject vim-clj "0.1.0-SNAPSHOT"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
@@ -8,8 +8,8 @@
                  [org.clojure/tools.nrepl "0.2.12"]
                  [org.clojure/tools.namespace "0.2.11"]
                  [cljfmt "0.5.7"]]
-  :main ^:skip-aot vim-nrepl.core
+  :main ^:skip-aot vim-clj.core
   :target-path "target/%s"
-  :uberjar-name "vim-nrepl.jar"
-  :repl-options {:init-ns vim-nrepl.repl}
+  :uberjar-name "vim-clj.jar"
+  :repl-options {:init-ns vim-clj.repl}
   :profiles {:uberjar {:aot :all}})

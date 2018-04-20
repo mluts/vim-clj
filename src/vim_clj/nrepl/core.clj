@@ -1,6 +1,6 @@
-(ns vim-nrepl.nrepl.core
+(ns vim-clj.nrepl.core
   (:require [clojure.tools.nrepl :as nrepl]
-            [vim-nrepl.nvim.core :as nvim]
+            [vim-clj.nvim.core :as nvim]
             [clojure.java.io :as io]
             [clojure.string :as string]))
 

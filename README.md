@@ -1,4 +1,4 @@
-# vim-nrepl
+# vim-clj
 
 FIXME: description
 
@@ -10,7 +10,7 @@ Download from http://example.com/FIXME.
 
 FIXME: explanation
 
-    $ java -jar vim-nrepl-0.1.0-standalone.jar [args]
+    $ java -jar vim-clj-0.1.0-standalone.jar [args]
 
 ## Options
 

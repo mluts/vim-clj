@@ -1,3 +1,3 @@
-# Introduction to vim-nrepl
+# Introduction to vim-clj
 
 TODO: write [great documentation](http://jacobian.org/writing/what-to-write/)
