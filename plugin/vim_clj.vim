@@ -56,6 +56,10 @@ function! vim_clj#format_code(code)
   endif
 endfunc
 
+function! vim_clj#ns_eval(ns, code)
+  return vim_clj#request('ns-eval', a:ns, a:code)
+endfunc
+
 command! -bar VimCljStart call vim_clj#start()
 command! -bar VimCljStop call vim_clj#stop()
 
