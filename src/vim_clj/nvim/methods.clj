@@ -17,12 +17,13 @@
 
 (defn ns-eval [msg]
   (let [{:keys [args]} (nvim/msg->map msg)
-        [ns code] args
+        [nrepl-scope ns code] args
         eval-res (delay (nrepl/ns-eval ns code))]
-    (when (and ns code @eval-res)
-      (as-> (select-keys @eval-res [:value :err :out]) $
-        (map (juxt (comp name key) val) $)
-        (into {} $)))))
+    (when (and nrepl-scope ns code @eval-res)
+      (binding [nrepl/*connection-scope* nrepl-scope]
+        (as-> (select-keys @eval-res [:value :err :out]) $
+         (map (juxt (comp name key) val) $)
+         (into {} $))))))
 
 (defn format-code [msg]
   (let [{:keys [args]} (nvim/msg->map msg)
@@ -33,12 +34,13 @@
 
 (defn symbol-info [msg]
   (let [{:keys [args]} (nvim/msg->map msg)
-        [ns symbol] args]
-    (when (and ns symbol)
-      (as-> (nrepl/symbol-info ns symbol) $
-        (select-keys $ [:doc :file :name :resource :ns :line :column :arglists-str :macro])
-        (map (juxt (comp name key) (comp str val)) $)
-        (into {} $)))))
+        [nrepl-scope ns symbol] args]
+    (when (and nrepl-scope ns symbol)
+      (binding [nrepl/*connection-scope* nrepl-scope]
+        (as-> (nrepl/symbol-info ns symbol) $
+         (select-keys $ [:doc :file :name :resource :ns :line :column :arglists-str :macro])
+         (map (juxt (comp name key) (comp str val)) $)
+         (into {} $))))))
 
 (defn register-methods! []
   (let [

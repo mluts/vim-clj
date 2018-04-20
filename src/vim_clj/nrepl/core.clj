@@ -5,8 +5,9 @@
             [clojure.string :as string]))
 
 (defonce connections (atom {}))
+(defonce default-scope "_default")
 
-(defonce nrepl-connection (atom nil))
+(def ^:dynamic *connection-scope* default-scope)
 
 (def ^:const portfile ".nrepl-port")
 
@@ -20,11 +21,16 @@
         session (nrepl/new-session client)]
     (nrepl/client-session client :session session)))
 
-(defn port-from-portfile []
-  (let [file (io/as-file portfile)
-        port (delay (parse-int (slurp portfile)))]
-    (when (and (.canRead file) (< 0 @port))
-      @port)))
+(defn port-from-portfile
+  ([] (->> (map port-from-portfile [(str *connection-scope* "/" portfile)
+                                    portfile])
+           (filter identity)
+           first))
+  ([path]
+   (let [file (io/as-file path)
+         port (delay (parse-int (slurp path)))]
+     (when (and (.canRead file) (< 0 @port))
+       @port))))
 
 (defn str->conn-map [conn-str]
   (let [conn-array (string/split conn-str #":" 2)
@@ -55,8 +61,12 @@
 (defn- alive? [_conn] true)
 
 (defn get-nrepl-connection []
-  (swap! nrepl-connection #(if (and % (alive? %)) % (new-connection)))
-  @nrepl-connection)
+  (let [conns (swap! connections (fn [m]
+                                   (let [conn (get m *connection-scope*)]
+                                     (if (and conn (alive? conn))
+                                       m
+                                       (assoc m *connection-scope* (new-connection))))))]
+    (get conns *connection-scope*)))
 
 (defn message [msg]
   (when-let [client (get-nrepl-connection)]
