@@ -48,6 +48,14 @@ function! vim_nrepl#ns()
   return vim_nrepl#request('clj-file-ns', expand('%'))
 endfunc
 
+function! vim_nrepl#format_code(code)
+  let result = vim_nrepl#request('format-code', a:code)
+
+  if result != v:null
+    return result
+  endif
+endfunc
+
 command! -bar VimNreplStart call vim_nrepl#start()
 command! -bar VimNreplStop call vim_nrepl#stop()
 

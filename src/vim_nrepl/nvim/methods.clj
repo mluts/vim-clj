@@ -1,7 +1,8 @@
 (ns vim-nrepl.nvim.methods
   (:require [vim-nrepl.inspect :as inspect]
             [vim-nrepl.nvim.core :as nvim]
-            [vim-nrepl.nrepl.core :as nrepl]))
+            [vim-nrepl.nrepl.core :as nrepl]
+            [cljfmt.core :as fmt]))
 
 (defonce should-shutdown (atom false))
 
@@ -27,15 +28,23 @@
             code (first args)
             ns (inspect/read-ns-name fpath)
             eval-res (delay (nrepl/ns-eval ns code))
-            eval-val (delay (->> @eval-res first :value))
-            eval-out (delay (->> @eval-res first :out))]
+            eval-val (delay (->> @eval-res :value))
+            eval-out (delay (->> @eval-res :out))]
         (when (and ns code @eval-res (or @eval-val @eval-out))
-          (echo-sync (str @eval-out) (or @eval-val "nil"))
-          )))
+          (echo-sync (str @eval-out) (or @eval-val "nil")))))
     nil))
 
+(defn format-code [msg]
+  (let [{:keys [args]} (nvim/msg->map msg)
+        code (first args)]
+    (when code
+      (try (fmt/reformat-string (str code))
+           (catch Exception _ nil)))))
+
 (defn register-methods! []
-  (let [methods {"shutdown"     #'shutdown
+  (let [
+        methods {"shutdown"     #'shutdown
                  "clj-file-ns"  #'clj-file-ns
-                 "buf-ns-eval"  #'buf-ns-eval}]
+                 "buf-ns-eval"  #'buf-ns-eval
+                 "format-code"  #'format-code}]
     (doseq [[m f] methods] (nvim/register-method! m f))))

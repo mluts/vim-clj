@@ -64,9 +64,14 @@
 (defn connection-for-pwd []
   (connection-for-dir (nvim/call-function "getcwd" [])))
 
+(defn connection-for-pwd? []
+  (let [pwd (nvim/call-function "getcwd" [])
+        conn (get @connections pwd)]
+    (boolean (and conn (alive? conn)))))
+
 (defn message [msg]
   (when-let [client (connection-for-pwd)]
-    (nrepl/message client msg)))
+    (nrepl/combine-responses (nrepl/message client msg))))
 
 (defn raw-eval [code]
   (message {:op "eval" :code code}))
@@ -78,11 +83,14 @@
   (raw-eval (format "(do (clojure.core/require '%s) (in-ns '%s) %s)" ns ns code)))
 
 (defn ns-eval-pprint [ns code]
-  (raw-eval (format "(do (clojure.core/require '%s) (in-ns '%s) %s)" ns ns code)))
+  (raw-eval-pprint (format "(do (clojure.core/require '%s) (in-ns '%s) %s)" ns ns code)))
+
+(defn format-code [code]
+  (message {:op "format-code" :code code}))
 
 (defn describe []
   (message {:op "describe"}))
 
 (defn has-op? [op]
   (when-let [res (describe)]
-    (boolean (get-in (first res) [:ops op]))))
+    (boolean (get-in res [:ops op]))))
