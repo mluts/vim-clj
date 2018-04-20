@@ -6,6 +6,8 @@
 
 (defonce connections (atom {}))
 
+(defonce nrepl-connection (atom nil))
+
 (def ^:const portfile ".nrepl-port")
 
 (defn- parse-int [str]
@@ -52,25 +54,12 @@
 
 (defn- alive? [_conn] true)
 
-(defn- connect-for-dir [conns-map dir]
-  (let [conn (get conns-map dir)]
-    (if (or (not conn) (not (alive? conn)))
-      (assoc conns-map dir (new-connection))
-      conns-map)))
-
-(defn connection-for-dir [dir]
-  (get (swap! connections connect-for-dir dir) dir))
-
-(defn connection-for-pwd []
-  (connection-for-dir (nvim/call-function "getcwd" [])))
-
-(defn connection-for-pwd? []
-  (let [pwd (nvim/call-function "getcwd" [])
-        conn (get @connections pwd)]
-    (boolean (and conn (alive? conn)))))
+(defn get-nrepl-connection []
+  (swap! nrepl-connection #(if (and % (alive? %)) % (new-connection)))
+  @nrepl-connection)
 
 (defn message [msg]
-  (when-let [client (connection-for-pwd)]
+  (when-let [client (get-nrepl-connection)]
     (nrepl/combine-responses (nrepl/message client msg))))
 
 (defn raw-eval [code]
@@ -90,6 +79,9 @@
 
 (defn describe []
   (message {:op "describe"}))
+
+(defn symbol-info [ns symbol]
+  (message {:op "info" :ns ns :symbol symbol}))
 
 (defn has-op? [op]
   (when-let [res (describe)]

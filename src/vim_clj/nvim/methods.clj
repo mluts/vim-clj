@@ -41,10 +41,20 @@
       (try (fmt/reformat-string (str code))
            (catch Exception _ nil)))))
 
+(defn symbol-info [msg]
+  (let [{:keys [args]} (nvim/msg->map msg)
+        [ns symbol] args]
+    (when (and ns symbol)
+      (as-> (nrepl/symbol-info ns symbol) $
+        (select-keys $ [:doc :file :name :resource :ns :line :column :arglists-str :macro])
+        (map (juxt (comp name key) (comp str val)) $)
+        (into {} $)))))
+
 (defn register-methods! []
   (let [
         methods {"shutdown"     #'shutdown
                  "clj-file-ns"  #'clj-file-ns
                  "buf-ns-eval"  #'buf-ns-eval
-                 "format-code"  #'format-code}]
+                 "format-code"  #'format-code
+                 "symbol-info"  #'symbol-info}]
     (doseq [[m f] methods] (nvim/register-method! m f))))
