@@ -1,8 +1,9 @@
 let s:plugin_dir = expand('<sfile>:p:h:h')
 let s:jar_path = join([s:plugin_dir, 'target', 'uberjar', 'vim-clj.jar'], '/')
-let g:vim_clj_is_running = 0
-let g:vim_clj_uberjar = 0
-let g:vim_clj_channel = 0
+
+if ! exists('g:vim_clj_is_running') | let g:vim_clj_is_running = 0 | endif
+if ! exists('g:vim_clj_uberjar') | let g:vim_clj_uberjar = 0 | endif
+if ! exists('g:vim_clj_channel') | let g:vim_clj_channel = 0 | endif
 
 function! vim_clj#is_running()
   return g:vim_clj_is_running
