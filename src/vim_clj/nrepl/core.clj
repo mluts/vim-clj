@@ -1,6 +1,5 @@
 (ns vim-clj.nrepl.core
   (:require [clojure.tools.nrepl :as nrepl]
-            [vim-clj.nvim.core :as nvim]
             [clojure.java.io :as io]
             [clojure.string :as string]))
 
@@ -10,6 +9,7 @@
 (def ^:dynamic *connection-scope* default-scope)
 
 (def ^:const portfile ".nrepl-port")
+(def ^:const nrepl-client-timeout 5000)
 
 (defn- parse-int [str]
   (try (Integer/parseInt str)
@@ -33,30 +33,34 @@
        @port))))
 
 (defn str->conn-map [conn-str]
-  (let [conn-array (string/split conn-str #":" 2)
-        [host port] conn-array]
-    (cond
-      (and (= 2 (count conn-array))
-           (< 0 (parse-int port))) {:host host :port (parse-int port)}
-      (and (= 1 (count conn-array))
-           (< 0 (parse-int host))) {:port (parse-int host)})))
+  (let [[addr scope]    (string/split conn-str #" " 2)
+        [host port]  (string/split addr #":" 2)
+        port-int      (delay (parse-int port))
+        host-as-int   (delay (parse-int host))
+        {:keys [port] :as conn-map} (cond
+                                      (and host port scope) {:host host
+                                                             :port @port-int
+                                                             :scope scope}
+                                      (and host scope)      {:port @host-as-int
+                                                             :scope scope})]
+    (when (and port (< 0 port)) conn-map)))
 
-(defn- ask-nrepl-address []
-  (nvim/call-function ["Nrepl <port> or <host:port>: "]))
+(defn port->conn-map [port]
+  {:port port})
 
-(defn conn-map-from-user-input []
-  (str->conn-map (ask-nrepl-address)))
+(defn conn-map->conn [{:keys [host port]}]
+  (nrepl-connect port :host host))
 
-(defn new-connection []
-  (let [portfile-port (delay (port-from-portfile))
-        conn-map (delay (conn-map-from-user-input))]
-    (cond
-      @portfile-port (nrepl-connect @portfile-port)
-      (and @conn-map
-           (:host @conn-map)
-           (:port @conn-map)) (nrepl-connect (:port @conn-map) (:host @conn-map))
-      (and @conn-map
-           (:port @conn-map)) (nrepl-connect (:port @conn-map)))))
+(defn auto-connect! []
+  (let [port (port-from-portfile)
+        conn-map (delay (port->conn-map port))]
+    (when (and port @conn-map)
+      (conn-map->conn @conn-map))))
+
+(defn manual-connect! [{:keys [scope] :as conn-map}]
+  (when-let [conn (conn-map->conn conn-map)]
+    (swap! connections assoc scope conn)
+    conn))
 
 (defn- alive? [_conn] true)
 
@@ -65,7 +69,7 @@
                                    (let [conn (get m *connection-scope*)]
                                      (if (and conn (alive? conn))
                                        m
-                                       (assoc m *connection-scope* (new-connection))))))]
+                                       (assoc m *connection-scope* (auto-connect!))))))]
     (get conns *connection-scope*)))
 
 (defn message [msg]

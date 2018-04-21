@@ -42,11 +42,25 @@
          (map (juxt (comp name key) (comp str val)) $)
          (into {} $))))))
 
+(defn connect-nrepl [msg]
+  (let [{:keys [args]} (nvim/msg->map msg)
+        [conn-str] args]
+    (future
+      (if-let [conn-map (nrepl/str->conn-map conn-str)]
+        (try
+          (do (nrepl/manual-connect! conn-map)
+              (nvim/out-writeln "Connected!"))
+          (catch Exception ex
+            (nvim/out-writeln (.getMessage ex))))
+        (nvim/out-writeln (str "Bad address: " conn-str))))
+    nil))
+
 (defn register-methods! []
   (let [
-        methods {"shutdown"     #'shutdown
-                 "clj-file-ns"  #'clj-file-ns
-                 "ns-eval"      #'ns-eval
-                 "format-code"  #'format-code
-                 "symbol-info"  #'symbol-info}]
+        methods {"shutdown"       #'shutdown
+                 "clj-file-ns"    #'clj-file-ns
+                 "ns-eval"        #'ns-eval
+                 "format-code"    #'format-code
+                 "symbol-info"    #'symbol-info
+                 "connect-nrepl"  #'connect-nrepl}]
     (doseq [[m f] methods] (nvim/register-method! m f))))

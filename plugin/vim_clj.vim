@@ -60,8 +60,13 @@ function! vim_clj#ns_eval(ns, code)
   return vim_clj#request('ns-eval', getcwd(), a:ns, a:code)
 endfunc
 
+function! vim_clj#connect_nrepl(conn_string)
+  call vim_clj#notify('connect-nrepl', join([a:conn_string, getcwd()], ' '))
+endfunc
+
 command! -bar VimCljStart call vim_clj#start()
 command! -bar VimCljStop call vim_clj#stop()
+command! -nargs=1 VimCljConnect call vim_clj#connect_nrepl('<args>')
 
 augroup vim_clj
   au!

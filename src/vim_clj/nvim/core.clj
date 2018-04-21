@@ -1,17 +1,18 @@
 (ns vim-clj.nvim.core
   (:require [neovim-client.1.api :as nvim-api]
-            [neovim-client.nvim :as nvim-client]))
+            [neovim-client.nvim :as nvim-client]
+            [neovim-client.message :as msg]))
 
 (defonce nvim (atom {}))
 
 (defonce is-running-var "vim_clj_is_running")
 (defonce channel-var "vim_clj_channel")
 
-(defn msg->map [[msg-type argc method args]]
-  {:msg-type  msg-type
-   :argc      argc
-   :method    method
-   :args      args})
+(defn msg->map [msg]
+  {:msg-type  (msg/msg-type msg)
+   :id        (msg/id msg)
+   :method    (msg/method msg)
+   :args      (msg/params msg)})
 
 (defn register-method! [m f]
   (nvim-client/register-method! @nvim m f))
@@ -46,6 +47,8 @@
 (defn set-channel-var []
   (nvim-api/get-api-info-async @nvim (fn [[channel]] (set-var-async channel-var channel (fn [& _])))))
 
-(defn echo [msg]
-  (let [msg (clojure.string/replace msg "'" "''")]
-    (command-async (str "echo '" msg "'") (fn [& _]))))
+(defn out-write [msg]
+  (nvim-api/out-write @nvim msg))
+
+(defn out-writeln [msg]
+  (nvim-api/out-write @nvim (str msg "\n")))
