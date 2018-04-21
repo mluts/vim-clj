@@ -55,10 +55,10 @@
         (nvim/out-writeln (str "Bad address: " conn-str))))
     nil))
 
-(defn nrepl-eval-prompt [msg]
+(defn- nrepl-eval [input-fn msg]
   (let [{:keys [args]} (nvim/msg->map msg)
         [nrepl-scope ns] args
-        code (delay (nvim/read-input (str ns "=> ")))
+        code (delay (input-fn (str ns "=> ")))
         eval-res #(select-str-keys (nrepl/ns-eval ns @code) [:value :err :out])]
     (when (and nrepl-scope ns)
       (let [history (vec (nvim/get-var "VIM_CLJ_NREPL_HISTORY"))
@@ -68,13 +68,17 @@
         (nvim/set-var "VIM_CLJ_NREPL_HISTORY" (conj history @code))
         result))))
 
+(def nrepl-eval-prompt (partial nrepl-eval nvim/read-input))
+(def nrepl-eval-cmdline (partial nrepl-eval nvim/read-input-cmline))
+
 (defn register-methods! []
   (let [
-        methods {"shutdown"       #'shutdown
-                 "clj-file-ns"    #'clj-file-ns
-                 "ns-eval"        #'ns-eval
-                 "format-code"    #'format-code
-                 "symbol-info"    #'symbol-info
-                 "connect-nrepl"  #'connect-nrepl
-                 "nrepl-eval-prompt" #'nrepl-eval-prompt}]
+        methods {"shutdown"           #'shutdown
+                 "clj-file-ns"        #'clj-file-ns
+                 "ns-eval"            #'ns-eval
+                 "format-code"        #'format-code
+                 "symbol-info"        #'symbol-info
+                 "connect-nrepl"      #'connect-nrepl
+                 "nrepl-eval-prompt"  #'nrepl-eval-prompt
+                 "nrepl-eval-cmdline" #'nrepl-eval-cmdline}]
     (doseq [[m f] methods] (nvim/register-method! m f))))

@@ -72,7 +72,7 @@
                                                     (map (fn [entry]
                                                            ["nvim_call_function" ["histadd" [hist-name entry]]]) hist-seq)))]
     (when error
-      (throw (Exception. (str "Failed to reset history for " hist-name))))))
+      (throw (Exception. (str "Failed to reset history for " hist-name ". " (last error)))))))
 
 (defn swap-history [hist-name hist-seq]
   (let [old-history (get-history hist-name)]
@@ -87,3 +87,11 @@
 
 (defn read-input [prompt]
   (call-function "input" [prompt]))
+
+(defn read-input-cmline [prompt]
+  (let [cedit (nvim-api/get-option @nvim "cedit")
+        [results error] (nvim-api/call-atomic @nvim [["nvim_input" [cedit]]
+                                 ["nvim_call_function" ["input" [prompt]]]])]
+    (if error
+      (throw (Exception. (str "Failed to read input. " (last error))))
+      (-> results second))))
