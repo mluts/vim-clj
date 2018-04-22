@@ -8,8 +8,8 @@
 
 (defn- select-str-keys [m key-seq]
   (->> (select-keys m key-seq)
-    (map (juxt (comp name key) (comp str val)))
-    (into {})))
+       (map (juxt (comp name key) (comp str val)))
+       (into {})))
 
 (defn shutdown [& _]
   (reset! should-shutdown true))
@@ -40,7 +40,11 @@
         [nrepl-scope ns symbol] args]
     (when (and nrepl-scope ns symbol)
       (binding [nrepl/*connection-scope* nrepl-scope]
-        (select-str-keys (nrepl/symbol-info ns symbol) [:doc :file :name :resource :ns :line :column :arglists-str :macro])))))
+        (let [{:keys [name ns arglists-str doc]} (nrepl/symbol-info ns symbol)]
+          (doseq [line [(when (and name ns) (str ns "/" name))
+                        arglists-str
+                        doc]]
+            (when line (nvim/out-writeln line))))))))
 
 (defn connect-nrepl [msg]
   (let [{:keys [args]} (nvim/msg->map msg)
@@ -72,8 +76,7 @@
 (def nrepl-eval-cmdline (partial nrepl-eval nvim/read-input-cmline))
 
 (defn register-methods! []
-  (let [
-        methods {"shutdown"           #'shutdown
+  (let [methods {"shutdown"           #'shutdown
                  "clj-file-ns"        #'clj-file-ns
                  "ns-eval"            #'ns-eval
                  "format-code"        #'format-code

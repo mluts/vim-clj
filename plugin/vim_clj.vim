@@ -65,11 +65,17 @@ function! vim_clj#connect_nrepl(conn_string)
   call vim_clj#notify('connect-nrepl', join([a:conn_string, getcwd()], ' '))
 endfunc
 
+function! vim_clj#doc(symbol)
+  call vim_clj#request('symbol-info', getcwd(), vim_clj#ns(), a:symbol)
+endfunc
+
 command! -bar VimCljStart call vim_clj#start()
 command! -bar VimCljStop call vim_clj#stop()
 command! -nargs=1 VimCljConnect call vim_clj#connect_nrepl('<args>')
+command! -nargs=1 VimCljDoc call vim_clj#doc('<args>')
 
 augroup vim_clj
   au!
   au VimLeave * call vim_clj#stop()
+  au FileType clojure setlocal keywordprg=:VimCljDoc
 augroup END
