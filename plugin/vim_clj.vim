@@ -69,13 +69,33 @@ function! vim_clj#doc(symbol)
   call vim_clj#request('symbol-info', getcwd(), vim_clj#ns(), a:symbol)
 endfunc
 
+function! vim_clj#nrepl_eval_cmdline()
+  let s:input = 1
+
+  try
+    return vim_clj#request('nrepl-eval-cmdline', getcwd(), vim_clj#ns())
+  finally
+    unlet! s:input
+  endtry
+endfunc
+
 command! -bar VimCljStart call vim_clj#start()
 command! -bar VimCljStop call vim_clj#stop()
 command! -nargs=1 VimCljConnect call vim_clj#connect_nrepl('<args>')
 command! -nargs=1 VimCljDoc call vim_clj#doc('<args>')
 
+function! s:cmdwinenter() abort
+  setlocal filetype=clojure
+endfunction
+
+function! s:cmdwinleave() abort
+  setlocal filetype< omnifunc<
+endfunction
+
 augroup vim_clj
   au!
   au VimLeave * call vim_clj#stop()
   au FileType clojure setlocal keywordprg=:VimCljDoc
+  au CmdWinEnter @ if exists('s:input') | call s:cmdwinenter() | endif
+  au CmdWinLeave @ if exists('s:input') | call s:cmdwinleave() | endif
 augroup END

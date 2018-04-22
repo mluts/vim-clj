@@ -91,7 +91,6 @@
 (defn read-input-cmline [prompt]
   (let [cedit (nvim-api/get-option @nvim "cedit")
         [results error] (nvim-api/call-atomic @nvim [["nvim_input" [cedit]]
-                                 ["nvim_call_function" ["input" [prompt]]]])]
-    (if error
-      (throw (Exception. (str "Failed to read input. " (last error))))
-      (-> results second))))
+                                                     ["nvim_call_function" ["input" [prompt]]]])]
+    (when-not error
+      (second results))))
