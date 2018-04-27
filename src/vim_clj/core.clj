@@ -9,11 +9,13 @@
   []
   (nvim/connect-to-stdin!)
 
-  (nvim/echo "VimNrepl is up")
+  (nvim/set-var-async nvim/is-running-var 1 nil)
+  (nvim/out-writeln "VimNrepl is up")
+  (methods/register-methods!)
 
   (loop []
     (Thread/sleep 1000)
     (when @methods/should-shutdown
-      (nvim/set-var-async nvim/is-running-var 0 (fn [& _]))
+      (nvim/set-var-async nvim/is-running-var 0 nil)
       (System/exit 0))
     (recur)))

@@ -55,7 +55,7 @@
           (do (nrepl/manual-connect! conn-map)
               (nvim/out-writeln "Connected!"))
           (catch Exception ex
-            (nvim/out-writeln (.getMessage ex))))
+            (nvim/out-writeln (str "Error: " (.getMessage ex)))))
         (nvim/out-writeln (str "Bad address: " conn-str))))
     nil))
 

@@ -9,22 +9,22 @@ function! vim_clj#is_running()
   return g:vim_clj_is_running
 endfunc
 
-function! vim_clj#on_exit()
+function! vim_clj#on_exit(...)
   echo 'VimNrepl exited'
 endfunc
 
 function! vim_clj#start()
-  if vim_clj_is_running() | return | endif
+  if vim_clj#is_running() | return | endif
 
   if g:vim_clj_uberjar
-    let g:vim_clj_channel = jobstart(['java', '-jar', s:jar_path], {'rpc': v:true, 'on_exit': function('VimNreplExit')})
+    let g:vim_clj_channel = jobstart(['java', '-jar', s:jar_path], {'rpc': v:true, 'on_exit': function('vim_clj#on_exit')})
   else
     let cmd = 'cd ' . s:plugin_dir . ' && lein run'
-    let g:vim_clj_channel = jobstart(cmd, {'rpc': v:true, 'on_exit': function('VimNreplExit')})
+    let g:vim_clj_channel = jobstart(cmd, {'rpc': v:true, 'on_exit': function('vim_clj#on_exit')})
   endif
 
   if g:vim_clj_channel <= 0
-    echo 'VimNrepl was not started'
+    echo 'VimClj was not started'
   endif
 endfunc
 
@@ -42,11 +42,11 @@ endfunc
 
 function! vim_clj#stop()
   let g:vim_clj_is_running = 0
-  call VimNreplRequest('shutdown')
+  call vim_clj#request('shutdown')
 endfunc
 
 function! vim_clj#ns()
-  return vim_clj#request('clj-file-ns', expand('%'))
+  return vim_clj#request('clj-file-ns', expand('%:p'))
 endfunc
 
 function! vim_clj#format_code(code)
@@ -79,10 +79,18 @@ function! vim_clj#nrepl_eval_cmdline()
   endtry
 endfunc
 
+function! vim_clj#nrepl_eval_cmdline_echo()
+  let res = vim_clj#nrepl_eval_cmdline()
+  if type(res) == v:t_number | return | endif
+  if has_key(res, 'out') | echo res.out | endif
+  if has_key(res, 'value') | echo res.value | endif
+endfunc
+
 command! -bar VimCljStart call vim_clj#start()
 command! -bar VimCljStop call vim_clj#stop()
 command! -nargs=1 VimCljConnect call vim_clj#connect_nrepl('<args>')
 command! -nargs=1 VimCljDoc call vim_clj#doc('<args>')
+command! -nargs=0 VimCljEvalCmdline call vim_clj#nrepl_eval_cmdline_echo()
 
 function! s:cmdwinenter() abort
   setlocal filetype=clojure
