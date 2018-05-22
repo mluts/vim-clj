@@ -10,7 +10,7 @@ function! vim_clj#is_running()
 endfunc
 
 function! vim_clj#on_exit(...)
-  echo 'VimNrepl exited'
+  echo 'VimClj exited'
 endfunc
 
 function! vim_clj#start()
@@ -49,12 +49,8 @@ function! vim_clj#ns()
   return vim_clj#request('clj-file-ns', expand('%:p'))
 endfunc
 
-function! vim_clj#format_code(code)
-  let result = vim_clj#request('format-code', a:code)
-
-  if result != v:null
-    return result
-  endif
+function! vim_clj#format_code(lnum, lcount)
+  call vim_clj#request('format-code', a:lnum, a:lcount)
 endfunc
 
 function! vim_clj#ns_eval(ns, code)
@@ -100,10 +96,15 @@ function! s:cmdwinleave() abort
   setlocal filetype< omnifunc<
 endfunction
 
+function! vim_clj#ping()
+  echo vim_clj#request('ping')
+endfunc
+
 augroup vim_clj
   au!
   au VimLeave * call vim_clj#stop()
   au FileType clojure setlocal keywordprg=:VimCljDoc
+  au FileType clojure setlocal formatexpr=vim_clj#format_code(v:lnum,v:count)
   au CmdWinEnter @ if exists('s:input') | call s:cmdwinenter() | endif
   au CmdWinLeave @ if exists('s:input') | call s:cmdwinleave() | endif
 augroup END

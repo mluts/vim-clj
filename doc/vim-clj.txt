@@ -1,0 +1,19 @@
+*vim-clj.txt*  Clojure support
+
+Author:  Michael Lutsiuk <michael.lutsiuk at gmail.com>
+License: Same terms as Vim itself (see |license|)
+
+========================================
+
+INTRODUCTION                                    *vim-clj-introduction*
+
+*vim-clj* provides support for clojure and nrepl in neovim. It relies on running
+external clojure process communicating with neovim editor.
+
+STARTING VIM-CLJ                                *vim-clj-starting*
+
+:VimCljStart    Starts vim-clj clojure server
+
+FORMATTING CODE                                 *vim-clj-formatting*
+
+gq{motion}      Formats code using cljfmt
