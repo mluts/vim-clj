@@ -3,7 +3,8 @@
             [neovim-client.1.api.buffer]
             [neovim-client.1.api.window]
             [neovim-client.nvim :as nvim-client]
-            [neovim-client.message :as msg]))
+            [neovim-client.message :as msg]
+            [clojure.string :as str]))
 
 (defonce nvim (atom {}))
 
@@ -94,3 +95,30 @@
                                                 setline-cmd
                                                 (when (not-empty lines) append-lines)])]
     (api-call call-atomic (vec commands))))
+
+(defn show-in-pseudo-file [name content]
+  (let [bufnr (api-call call-function "bufnr" [name])]
+    (if (<= 0 bufnr)
+      (api-call command (str "buffer " bufnr))
+      (do
+        (api-call command (str "new " name))
+        (buf-call set-option "buftype" "nofile")))
+    (buf-call set-option "modifiable" true)
+    (api-call command "1,$delete")
+    (replace-lines 1 1 content)
+    (buf-call set-option "modifiable" false)))
+
+(defn- save-context-mark []
+  (api-call command "normal! m'"))
+
+(defn setpos [line col]
+  (save-context-mark)
+  (api-call call-function "setpos" [".", [0 line col 0]]))
+
+(defn edit-zip [file entry]
+  (let [bufname (str "zipfile:" file "::" (str/replace entry #"^/" ""))
+        bufnr (api-call call-function "bufnr" [bufname])]
+    (if (<= 0 bufnr)
+      (api-call command (str "buf " bufnr))
+      (api-call command (str "edit " bufname)))))
+

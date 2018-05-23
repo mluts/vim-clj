@@ -94,8 +94,12 @@ function! vim_clj#ping()
   echo vim_clj#request('ping')
 endfunc
 
+nnoremap <silent> <Plug>VimCljJump :call vim_clj#request('jump-to-symbol')<CR>
+nnoremap <silent> <Plug>VimCljEvalCmdline :call vim_clj#request('nrepl-eval-cmdline')<CR>
+
 function! s:setup_mappings()
-  nmap <buffer> cqc :call vim_clj#nrepl_eval_cmdline()<CR>
+  nmap <buffer> cqc     <Plug>VimCljEvalCmdline
+  nmap <buffer> [<C-D>  <Plug>VimCljJump
 endfunc
 
 augroup vim_clj

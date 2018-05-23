@@ -1,7 +1,7 @@
 (ns vim-clj.nrepl.core
   (:require [clojure.tools.nrepl :as nrepl]
             [clojure.java.io :as io]
-            [clojure.string :as string]))
+            [clojure.string :as str]))
 
 (defonce connections (atom {}))
 (defonce default-scope "_default")
@@ -33,8 +33,8 @@
        @port))))
 
 (defn str->conn-map [conn-str]
-  (let [[addr scope]    (string/split conn-str #" " 2)
-        [host port]  (string/split addr #":" 2)
+  (let [[addr scope]    (str/split conn-str #" " 2)
+        [host port]  (str/split addr #":" 2)
         port-int      (delay (parse-int port))
         host-as-int   (delay (parse-int host))
         {:keys [port] :as conn-map} (cond
@@ -100,3 +100,17 @@
 (defn has-op? [op]
   (when-let [res (describe)]
     (boolean (get-in res [:ops op]))))
+
+(defn- file-str->map [file-str]
+  (let [[f-type tail] (str/split file-str #":" 2)]
+    (if (= "jar" f-type)
+      (let [[file-str entry] (str/split tail #"!" 2)]
+        (assoc (file-str->map file-str)
+               :entry entry))
+      {:file tail})))
+
+(defn symbol-info->location [{:keys [file column line]}]
+  (when file
+    (assoc (file-str->map file)
+          :column column
+          :line line)))

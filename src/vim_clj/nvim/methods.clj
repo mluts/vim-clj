@@ -3,7 +3,9 @@
             [vim-clj.nvim.core :as nvim :refer [api-call]]
             [vim-clj.nrepl.core :as nrepl]
             [cljfmt.core :as fmt]
-            [medley.core :as m]))
+            [medley.core :as m]
+            [clojure.string :as str])
+  (:import (java.util.jar JarFile)))
 
 (defonce should-shutdown (atom false))
 
@@ -18,18 +20,52 @@
 (defn- stringify-keys [res]
   (m/map-keys name res))
 
+(defn- read-from-jar
+  ([path-spec]
+   (let [[_ _ path] (str/split path-spec #":")
+         [jar-file entry-path] (str/split (str path) #"!")]
+     (when (str/includes? path ".jar")
+       (read-from-jar jar-file entry-path))))
+  ([jarfile path]
+   (let [path (str/replace path #"^/" "")
+         jf (JarFile. jarfile)
+         entry (.getEntry jf path)]
+     (when entry
+       (slurp (.getInputStream jf entry))))))
+
+(defn jump-to-symbol
+  ([]
+   (let [ns (clj-file-ns (api-call call-function "expand" ["%"]))
+         sym (api-call call-function "expand" ["<cword>"])]
+     (jump-to-symbol ns sym)))
+  ([ns sym]
+   (let [{:keys [file entry column line]} (->> (nrepl/symbol-info ns sym)
+                                               nrepl/symbol-info->location)
+         bufpath (api-call call-function "expand" ["%:p"])]
+     (cond
+       (and file entry (str/includes? file ".jar")) (do
+                                                      (nvim/edit-zip file entry)
+                                                      (nvim/setpos line column))
+       (= file bufpath) (nvim/setpos line column)
+
+       file (do
+              (api-call command (str "edit " file))
+              (nvim/setpos line column))
+       :else (nvim/err-writeln (str "Can't find source for " sym))))))
+
 (defn ns-eval [nrepl-scope ns code]
   (binding [nrepl/*connection-scope* nrepl-scope]
     (stringify-keys (nrepl/ns-eval ns code))))
 
 (defn format-code [lnum lcount]
-  (let [[line1 line2]  [lnum (dec (+ lnum lcount))]
-        lines          (api-call call-function "getline" [line1 line2])
-        formatted-code (try (fmt/reformat-string (clojure.string/join "\n" lines))
-                            (catch Exception _ nil))]
-    (when formatted-code
-      (nvim/replace-lines line1 line2 formatted-code))
-    formatted-code))
+  (when (not (->> (api-call call-function "mode" []) (re-find #"[iR]")))
+    (let [[line1 line2]  [lnum (dec (+ lnum lcount))]
+         lines          (api-call call-function "getline" [line1 line2])
+         formatted-code (try (fmt/reformat-string (clojure.string/join "\n" lines))
+                             (catch Exception _ nil))]
+     (when formatted-code
+       (nvim/replace-lines line1 line2 formatted-code))
+     formatted-code)))
 
 (defn symbol-info [nrepl-scope ns symbol]
   (binding [nrepl/*connection-scope* nrepl-scope]
@@ -90,5 +126,6 @@
                  "connect-nrepl"      #'connect-nrepl
                  "nrepl-eval-prompt"  #'nrepl-eval-prompt
                  "nrepl-eval-cmdline" #'nrepl-eval-cmdline
-                 "ping"               #'ping}]
+                 "ping"               #'ping
+                 "jump-to-symbol"     #'jump-to-symbol}]
     (doseq [[name f] methods] (defapimethod name f))))
