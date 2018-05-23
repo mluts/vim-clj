@@ -7,7 +7,8 @@
                  [neovim-client "0.1.2"]
                  [org.clojure/tools.nrepl "0.2.12"]
                  [org.clojure/tools.namespace "0.2.11"]
-                 [cljfmt "0.5.7"]]
+                 [cljfmt "0.5.7"]
+                 [medley "1.0.0"]]
   :main ^:skip-aot vim-clj.core
   :target-path "target/%s"
   :uberjar-name "vim-clj.jar"

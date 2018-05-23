@@ -75,18 +75,12 @@ function! vim_clj#nrepl_eval_cmdline()
   endtry
 endfunc
 
-function! vim_clj#nrepl_eval_cmdline_echo()
-  let res = vim_clj#nrepl_eval_cmdline()
-  if type(res) == v:t_number | return | endif
-  if has_key(res, 'out') | echo res.out | endif
-  if has_key(res, 'value') | echo res.value | endif
-endfunc
-
 command! -bar VimCljStart call vim_clj#start()
 command! -bar VimCljStop call vim_clj#stop()
 command! -nargs=1 VimCljConnect call vim_clj#connect_nrepl('<args>')
 command! -nargs=1 VimCljDoc call vim_clj#doc('<args>')
-command! -nargs=0 VimCljEvalCmdline call vim_clj#nrepl_eval_cmdline_echo()
+command! -nargs=0 VimCljEvalCmdline call vim_clj#nrepl_eval_cmdline()
+command! -nargs=0 VimCljIsRunning echo vim_clj#is_running()
 
 function! s:cmdwinenter() abort
   setlocal filetype=clojure
@@ -100,11 +94,16 @@ function! vim_clj#ping()
   echo vim_clj#request('ping')
 endfunc
 
+function! s:setup_mappings()
+  nmap <buffer> cqc :call vim_clj#nrepl_eval_cmdline()<CR>
+endfunc
+
 augroup vim_clj
   au!
   au VimLeave * call vim_clj#stop()
   au FileType clojure setlocal keywordprg=:VimCljDoc
   au FileType clojure setlocal formatexpr=vim_clj#format_code(v:lnum,v:count)
+  au FileType clojure call s:setup_mappings()
   au CmdWinEnter @ if exists('s:input') | call s:cmdwinenter() | endif
   au CmdWinLeave @ if exists('s:input') | call s:cmdwinleave() | endif
 augroup END

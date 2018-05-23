@@ -38,6 +38,9 @@
 (defn out-writeln [msg]
   (nvim-api/out-write @nvim (str msg "\n")))
 
+(defn err-writeln [msg]
+  (nvim-api/err-writeln @nvim msg))
+
 (defn get-history [hist-name]
   {:pre [(string? hist-name)]}
   (let [first-hist-n 1
@@ -49,23 +52,21 @@
       results)))
 
 (defn reset-history [hist-name hist-seq]
-  (let [[_ error] (nvim-api/call-atomic @nvim
-                                        (cons ["nvim_call_function" ["histdel" [hist-name]]]
-                                              (map (fn [entry]
-                                                     ["nvim_call_function" ["histadd" [hist-name entry]]]) hist-seq)))]
-    (when error
-      (throw (Exception. (str "Failed to reset history for " hist-name ". " (last error)))))))
+  (nvim-api/call-atomic @nvim
+                        (cons ["nvim_call_function" ["histdel" [hist-name]]]
+                              (map (fn [entry]
+                                     ["nvim_call_function" ["histadd" [hist-name entry]]]) hist-seq))))
 
 (defn swap-history [hist-name hist-seq]
   (let [old-history (get-history hist-name)]
     (reset-history hist-name hist-seq)
     old-history))
 
-(defn with-history [hist-name hist-seq f]
-  (let [old-history (swap-history hist-name hist-seq)
-        res (f)]
-    (reset-history hist-name old-history)
-    res))
+(defmacro with-history [hist-name hist-seq & body]
+  `(let [old-history# (swap-history ~hist-name ~hist-seq)
+         res# (do ~@body)]
+     (reset-history ~hist-name old-history#)
+     res#))
 
 (defn read-input [prompt]
   (api-call call-function "input" [prompt]))
