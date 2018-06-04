@@ -75,12 +75,18 @@ function! vim_clj#nrepl_eval_cmdline()
   endtry
 endfunc
 
+function! vim_clj#require_ns(...)
+  let ns = a:0 ? a:1 : vim_clj#ns()
+  return vim_clj#request('require-ns', getcwd(), ns)
+endfunc
+
 command! -bar VimCljStart call vim_clj#start()
 command! -bar VimCljStop call vim_clj#stop()
 command! -nargs=1 VimCljConnect call vim_clj#connect_nrepl('<args>')
 command! -nargs=1 VimCljDoc call vim_clj#doc('<args>')
 command! -nargs=0 VimCljEvalCmdline call vim_clj#nrepl_eval_cmdline()
 command! -nargs=0 VimCljIsRunning echo vim_clj#is_running()
+command! -nargs=? VimCljRequireNS call vim_clj#require_ns(<f-args>)
 
 function! s:cmdwinenter() abort
   setlocal filetype=clojure
@@ -101,7 +107,7 @@ nnoremap <silent> <Plug>VimCljDoc :call vim_clj#doc(expand('<cword>'))<CR>
 function! s:setup_mappings()
   nmap <buffer> cqc     <Plug>VimCljEvalCmdline
   nmap <buffer> [<C-D>  <Plug>VimCljJump
-  nmap <buffer> K <Plug>VimCljDoc
+  nmap <buffer> K       <Plug>VimCljDoc
 endfunc
 
 augroup vim_clj

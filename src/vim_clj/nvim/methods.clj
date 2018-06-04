@@ -107,6 +107,13 @@
 
 (defn ping [] "pong")
 
+(defn nrepl-require-ns [nrepl-scope ns]
+  (println "require")
+  (nrepl/with-scope nrepl-scope
+    (let [code (str `(require [~(symbol ns) :reload]))]
+      (nrepl/ns-eval ns code)
+      (nvim/out-writeln code))))
+
 (def nrepl-eval-prompt (partial nrepl-eval nvim/read-input))
 (def nrepl-eval-cmdline (partial nrepl-eval nvim/read-input-cmline))
 
@@ -129,5 +136,6 @@
                  "nrepl-eval-prompt"  #'nrepl-eval-prompt
                  "nrepl-eval-cmdline" #'nrepl-eval-cmdline
                  "ping"               #'ping
-                 "jump-to-symbol"     #'jump-to-symbol}]
+                 "jump-to-symbol"     #'jump-to-symbol
+                 "require-ns"         #'nrepl-require-ns}]
     (doseq [[name f] methods] (defapimethod name f))))
