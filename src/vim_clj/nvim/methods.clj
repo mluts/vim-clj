@@ -51,7 +51,7 @@
          (= file bufpath) (nvim/setpos line column)
 
          file (do
-                (api-call command (str "edit " file))
+                (api-call command (str "keepjumps edit " file))
                 (nvim/setpos line column))
          :else (nvim/err-writeln (str "Can't find source for " sym)))))))
 

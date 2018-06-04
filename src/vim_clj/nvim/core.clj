@@ -112,7 +112,6 @@
   (api-call command "normal! m'"))
 
 (defn setpos [line col]
-  (save-context-mark)
   (api-call call-function "setpos" [".", [0 line col 0]]))
 
 (defn edit-zip [file entry]
