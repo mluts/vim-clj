@@ -114,3 +114,7 @@
     (assoc (file-str->map file)
           :column column
           :line line)))
+
+(defmacro with-scope [scope & body]
+  `(binding [*connection-scope* ~scope]
+     ~@body))

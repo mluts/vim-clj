@@ -35,26 +35,28 @@
 
 (defn jump-to-symbol
   ([]
-   (let [ns (clj-file-ns (api-call call-function "expand" ["%"]))
+   (let [nrepl-scope (api-call call-function "getcwd" [])
+         ns (clj-file-ns (api-call call-function "expand" ["%:p"]))
          sym (api-call call-function "expand" ["<cword>"])]
-     (jump-to-symbol ns sym)))
-  ([ns sym]
-   (let [{:keys [file entry column line]} (->> (nrepl/symbol-info ns sym)
-                                               nrepl/symbol-info->location)
-         bufpath (api-call call-function "expand" ["%:p"])]
-     (cond
-       (and file entry (str/includes? file ".jar")) (do
-                                                      (nvim/edit-zip file entry)
-                                                      (nvim/setpos line column))
-       (= file bufpath) (nvim/setpos line column)
+     (jump-to-symbol nrepl-scope ns sym)))
+  ([nrepl-scope ns sym]
+   (nrepl/with-scope nrepl-scope
+     (let [{:keys [file entry column line]} (->> (nrepl/symbol-info ns sym)
+                                                 nrepl/symbol-info->location)
+           bufpath (api-call call-function "expand" ["%:p"])]
+       (cond
+         (and file entry (str/includes? file ".jar")) (do
+                                                        (nvim/edit-zip file entry)
+                                                        (nvim/setpos line column))
+         (= file bufpath) (nvim/setpos line column)
 
-       file (do
-              (api-call command (str "edit " file))
-              (nvim/setpos line column))
-       :else (nvim/err-writeln (str "Can't find source for " sym))))))
+         file (do
+                (api-call command (str "edit " file))
+                (nvim/setpos line column))
+         :else (nvim/err-writeln (str "Can't find source for " sym)))))))
 
 (defn ns-eval [nrepl-scope ns code]
-  (binding [nrepl/*connection-scope* nrepl-scope]
+  (nrepl/with-scope nrepl-scope
     (stringify-keys (nrepl/ns-eval ns code))))
 
 (defn format-code [lnum lcount]
@@ -68,7 +70,7 @@
      formatted-code)))
 
 (defn symbol-info [nrepl-scope ns symbol]
-  (binding [nrepl/*connection-scope* nrepl-scope]
+  (nrepl/with-scope nrepl-scope
     (let [{:keys [name ns arglists-str doc]} (nrepl/symbol-info ns symbol)]
       (doseq [line [(when (and name ns) (str ns "/" name))
                     arglists-str
@@ -95,7 +97,7 @@
 
 (defn- nrepl-eval [input-fn nrepl-scope ns]
   (let [history (vec (api-call get-var "VIM_CLJ_NREPL_HISTORY"))]
-    (binding [nrepl/*connection-scope* nrepl-scope]
+    (nrepl/with-scope nrepl-scope
       (let [res (nvim/with-history "@" history
                   (let [code (input-fn (str ns "=> "))]
                     (when (not-empty code)

@@ -6,8 +6,8 @@
             [clojure.string :as str]
             [clojure.java.io :as io]))
 
-(defn connect-nvim! []
-  (nvim/connect-to-port! 7777)
+(defn connect-nvim! [& {:keys [port] :or {port 8888}}]
+  (nvim/connect-to-port! port)
   (nvim/set-is-running 1)
   (nvim/set-channel-var)
   (methods/register-methods!))
